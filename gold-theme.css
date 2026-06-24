@@ -465,6 +465,7 @@ body {
 .recording-three { background: linear-gradient(145deg, #755b32, #16100a); }
 .recording-four { background: linear-gradient(145deg, #8a744b, #1c150d); }
 .recording-five { background: linear-gradient(145deg, #3f3a32, #070707); }
+.recording-six { background: linear-gradient(145deg, #315c5c, #071112); }
 .lavender { background: linear-gradient(145deg, #8b7651, #322719); }
 .mock-detail, .mock-kv, .mock-live, .mock-video { color: #f7e8c1; }
 .mock-live b { color: #e9c66f; }
