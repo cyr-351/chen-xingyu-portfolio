@@ -124,7 +124,6 @@ document.querySelectorAll(".carousel-detail-frame").forEach(frame => {
 
 document.querySelectorAll("[data-video-player]").forEach(player => {
   const videos = [
-    "assets/live-scene-01.mp4",
     "assets/live-scene-02.mp4",
     "assets/live-scene-03.mp4",
     "assets/live-scene-04.mp4",
