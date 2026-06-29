@@ -11,6 +11,42 @@ const modalData = [
   ["直播电商 · 直播间动态视觉", "直播视觉｜动态视觉展示 02", "直播间动态视觉与贴片效果录屏，展示视觉素材在真实直播场景中的动态呈现与节奏表现。", "#9d7435", "负责内容：实时直播间录屏 / 动态视觉 / 录屏展示"]
 ];
 
+function loadVideo(video) {
+  if (!video || video.dataset.loaded === "true") return;
+  const source = video.querySelector("source");
+  if (!source) return;
+  const src = source.dataset.src || source.getAttribute("src");
+  if (!src) return;
+  source.src = src;
+  source.removeAttribute("data-src");
+  video.load();
+  video.dataset.loaded = "true";
+}
+
+let videoLoadTicking = false;
+function loadVisibleVideos() {
+  videoLoadTicking = false;
+  document.querySelectorAll("video[data-lazy-video]").forEach(video => {
+    const project = video.closest(".project");
+    if (project && project.classList.contains("hidden")) return;
+    const rect = video.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 700 && rect.bottom > -300) loadVideo(video);
+  });
+}
+
+function scheduleVisibleVideos() {
+  if (videoLoadTicking) return;
+  videoLoadTicking = true;
+  requestAnimationFrame(loadVisibleVideos);
+}
+
+document.querySelectorAll("video[data-lazy-video]").forEach(video => {
+  video.addEventListener("pointerdown", () => loadVideo(video), { once: true });
+  video.addEventListener("pointerenter", () => loadVideo(video), { once: true });
+  video.addEventListener("focus", () => loadVideo(video), { once: true });
+  video.addEventListener("play", () => loadVideo(video), { once: true });
+});
+
 filterButtons.forEach(button => {
   button.addEventListener("click", () => {
     filterButtons.forEach(item => item.classList.remove("active"));
@@ -19,6 +55,7 @@ filterButtons.forEach(button => {
     projects.forEach(project => {
       project.classList.toggle("hidden", filter !== "all" && !project.dataset.category.includes(filter));
     });
+    scheduleVisibleVideos();
   });
 });
 
@@ -33,7 +70,11 @@ document.querySelectorAll("[data-jump-filter]").forEach(link => {
 window.addEventListener("load", () => {
   const videoButton = document.querySelector('.filters button[data-filter="video"]');
   if (videoButton) videoButton.click();
+  scheduleVisibleVideos();
 });
+
+window.addEventListener("scroll", scheduleVisibleVideos, { passive: true });
+window.addEventListener("resize", scheduleVisibleVideos);
 
 document.querySelectorAll("[data-carousel]").forEach(carousel => {
   const carouselImages = {
@@ -146,8 +187,11 @@ document.querySelectorAll("[data-video-player]").forEach(player => {
   function updateVideo(nextIndex) {
     index = (nextIndex + videos.length) % videos.length;
     video.pause();
-    video.querySelector("source").src = videos[index];
-    video.load();
+    const source = video.querySelector("source");
+    source.dataset.src = videos[index];
+    source.removeAttribute("src");
+    video.dataset.loaded = "false";
+    loadVideo(video);
     count.textContent = `${String(index + 1).padStart(2, "0")} / ${String(videos.length).padStart(2, "0")}`;
     dotItems.forEach((dot, itemIndex) => dot.classList.toggle("active", itemIndex === index));
   }
