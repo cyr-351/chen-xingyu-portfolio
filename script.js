@@ -40,7 +40,7 @@ function warmVisibleVideos() {
     const project = video.closest(".project");
     if (project && project.classList.contains("hidden")) return;
     const rect = video.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 1200 && rect.bottom > -400) {
+    if (rect.top < window.innerHeight + 2200 && rect.bottom > -600) {
       loadVideo(video);
     }
   });
@@ -178,7 +178,6 @@ document.querySelectorAll(".carousel-detail-frame").forEach(frame => {
 
 document.querySelectorAll("[data-video-player]").forEach(player => {
   const videos = [
-    "assets/live-scene-01.mp4",
     "assets/live-scene-02.mp4",
     "assets/live-scene-03.mp4",
     "assets/live-scene-04.mp4",
