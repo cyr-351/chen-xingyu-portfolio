@@ -33,6 +33,25 @@ function videoPosterFromSrc(src) {
   return src.replace(/assets\/([^/.]+)\.mp4$/, "assets/posters/$1.jpg");
 }
 
+let warmLoadTicking = false;
+function warmVisibleVideos() {
+  warmLoadTicking = false;
+  document.querySelectorAll("video[data-lazy-video]").forEach(video => {
+    const project = video.closest(".project");
+    if (project && project.classList.contains("hidden")) return;
+    const rect = video.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 1200 && rect.bottom > -400) {
+      loadVideo(video);
+    }
+  });
+}
+
+function scheduleWarmVideos() {
+  if (warmLoadTicking) return;
+  warmLoadTicking = true;
+  requestAnimationFrame(warmVisibleVideos);
+}
+
 document.querySelectorAll("video[data-lazy-video]").forEach(video => {
   video.addEventListener("pointerdown", () => loadVideo(video), { once: true });
   video.addEventListener("click", () => loadAndPlayVideo(video), { once: true });
@@ -46,6 +65,7 @@ function applyFilter(filter) {
   projects.forEach(project => {
     project.classList.toggle("hidden", filter !== "all" && !project.dataset.category.includes(filter));
   });
+  scheduleWarmVideos();
 }
 
 filterButtons.forEach(button => {
@@ -62,9 +82,12 @@ document.querySelectorAll("[data-jump-filter]").forEach(link => {
 
 window.addEventListener("load", () => {
   applyFilter("video");
+  scheduleWarmVideos();
 });
 
 applyFilter("video");
+window.addEventListener("scroll", scheduleWarmVideos, { passive: true });
+window.addEventListener("resize", scheduleWarmVideos);
 
 document.querySelectorAll("[data-carousel]").forEach(carousel => {
   const carouselImages = {
