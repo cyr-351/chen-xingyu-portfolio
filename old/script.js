@@ -23,40 +23,33 @@ function loadVideo(video) {
   video.dataset.loaded = "true";
 }
 
-let videoLoadTicking = false;
-function loadVisibleVideos() {
-  videoLoadTicking = false;
-  document.querySelectorAll("video[data-lazy-video]").forEach(video => {
-    const project = video.closest(".project");
-    if (project && project.classList.contains("hidden")) return;
-    const rect = video.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 700 && rect.bottom > -300) loadVideo(video);
-  });
+function loadAndPlayVideo(video) {
+  loadVideo(video);
+  const playPromise = video.play();
+  if (playPromise) playPromise.catch(() => {});
 }
 
-function scheduleVisibleVideos() {
-  if (videoLoadTicking) return;
-  videoLoadTicking = true;
-  requestAnimationFrame(loadVisibleVideos);
+function videoPosterFromSrc(src) {
+  return src.replace(/assets\/([^/.]+)\.mp4$/, "../assets/posters/$1.jpg");
 }
 
 document.querySelectorAll("video[data-lazy-video]").forEach(video => {
   video.addEventListener("pointerdown", () => loadVideo(video), { once: true });
-  video.addEventListener("pointerenter", () => loadVideo(video), { once: true });
-  video.addEventListener("focus", () => loadVideo(video), { once: true });
+  video.addEventListener("click", () => loadAndPlayVideo(video), { once: true });
   video.addEventListener("play", () => loadVideo(video), { once: true });
 });
 
-filterButtons.forEach(button => {
-  button.addEventListener("click", () => {
-    filterButtons.forEach(item => item.classList.remove("active"));
-    button.classList.add("active");
-    const filter = button.dataset.filter;
-    projects.forEach(project => {
-      project.classList.toggle("hidden", filter !== "all" && !project.dataset.category.includes(filter));
-    });
-    scheduleVisibleVideos();
+function applyFilter(filter) {
+  filterButtons.forEach(item => {
+    item.classList.toggle("active", item.dataset.filter === filter);
   });
+  projects.forEach(project => {
+    project.classList.toggle("hidden", filter !== "all" && !project.dataset.category.includes(filter));
+  });
+}
+
+filterButtons.forEach(button => {
+  button.addEventListener("click", () => applyFilter(button.dataset.filter));
 });
 
 document.querySelectorAll("[data-jump-filter]").forEach(link => {
@@ -68,13 +61,10 @@ document.querySelectorAll("[data-jump-filter]").forEach(link => {
 });
 
 window.addEventListener("load", () => {
-  const videoButton = document.querySelector('.filters button[data-filter="video"]');
-  if (videoButton) videoButton.click();
-  scheduleVisibleVideos();
+  applyFilter("video");
 });
 
-window.addEventListener("scroll", scheduleVisibleVideos, { passive: true });
-window.addEventListener("resize", scheduleVisibleVideos);
+applyFilter("video");
 
 document.querySelectorAll("[data-carousel]").forEach(carousel => {
   const carouselImages = {
@@ -191,7 +181,7 @@ document.querySelectorAll("[data-video-player]").forEach(player => {
     source.dataset.src = videos[index];
     source.removeAttribute("src");
     video.dataset.loaded = "false";
-    loadVideo(video);
+    video.poster = videoPosterFromSrc(videos[index]);
     count.textContent = `${String(index + 1).padStart(2, "0")} / ${String(videos.length).padStart(2, "0")}`;
     dotItems.forEach((dot, itemIndex) => dot.classList.toggle("active", itemIndex === index));
   }
